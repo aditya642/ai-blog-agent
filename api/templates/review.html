@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review: {{ task.values.topic }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans">
+    <div class="max-w-6xl mx-auto px-4 py-8">
+        <nav class="mb-8">
+            <a href="/" class="text-indigo-600 hover:text-indigo-800 flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                Back to Dashboard
+            </a>
+        </nav>
+
+        <header class="mb-10 flex justify-between items-start">
+            <div>
+                <h1 class="text-4xl font-extrabold text-gray-900">{{ task.values.topic }}</h1>
+                <p class="text-gray-500 mt-2">Thread ID: <span class="font-mono">{{ task.thread_id }}</span></p>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                <form action="/approve/{{ task.thread_id }}" method="post" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Schedule Publication (Optional)</label>
+                        <input type="datetime-local" name="scheduled_time" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    </div>
+                    <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition transform hover:-translate-y-0.5">
+                        Approve & Publish
+                    </button>
+                </form>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Main Content Area -->
+            <div class="lg:col-span-2 space-y-8">
+                <!-- Featured Image -->
+                {% if task.values.image_url %}
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                        <h2 class="text-lg font-bold text-gray-700 uppercase tracking-wider">Featured Image</h2>
+                    </div>
+                    <div class="p-0">
+                        <img src="{{ task.values.image_url }}" alt="Featured Image" class="w-full h-auto">
+                        <div class="p-4 bg-gray-50 border-t border-gray-200">
+                            <p class="text-xs text-gray-500 italic"><span class="font-bold">Prompt:</span> {{ task.values.image_prompt }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="bg-gray-50 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                        <h2 class="text-lg font-bold text-gray-700 uppercase tracking-wider">Article Draft</h2>
+                        <span class="text-xs text-gray-400 font-mono">markdown</span>
+                    </div>
+                    <div id="content" class="p-8 prose prose-indigo max-w-none">
+                        {{ task.values.draft_blog }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="space-y-8">
+                <!-- SEO Section -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="bg-blue-50 px-6 py-4 border-b border-blue-100">
+                        <h2 class="text-lg font-bold text-blue-800 uppercase tracking-wider">SEO Metadata</h2>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-400 uppercase">SEO Title</label>
+                            <p class="text-gray-800 font-medium">{{ task.values.seo_data.seo_title if task.values.seo_data else 'N/A' }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-400 uppercase">Meta Description</label>
+                            <p class="text-gray-600 text-sm italic">{{ task.values.seo_data.meta_description if task.values.seo_data else 'N/A' }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-400 uppercase">Slug</label>
+                            <p class="text-indigo-600 font-mono text-sm">/{{ task.values.seo_data.slug if task.values.seo_data else 'N/A' }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-400 uppercase">Keywords</label>
+                            <div class="flex flex-wrap gap-2 mt-2">
+                                {% if task.values.seo_data and task.values.seo_data.keywords %}
+                                    {% for keyword in task.values.seo_data.keywords %}
+                                        <span class="bg-blue-50 text-blue-700 px-2 py-1 rounded-md text-xs font-medium border border-blue-100">{{ keyword }}</span>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="text-gray-400 text-sm italic">None</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Social Media Section -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="bg-indigo-50 px-6 py-4 border-b border-indigo-100">
+                        <h2 class="text-lg font-bold text-indigo-800 uppercase tracking-wider">Social Media Posts</h2>
+                    </div>
+                    <div class="p-6 space-y-6">
+                        {% if task.values.social_posts %}
+                        <div>
+                            <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Twitter (X)</label>
+                            <div class="bg-gray-50 p-3 rounded-lg text-sm text-gray-700 border border-gray-100">
+                                {{ task.values.social_posts.twitter }}
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-400 uppercase mb-2">LinkedIn</label>
+                            <div class="bg-gray-50 p-3 rounded-lg text-sm text-gray-700 border border-gray-100">
+                                {{ task.values.social_posts.linkedin }}
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Instagram</label>
+                            <div class="bg-gray-50 p-3 rounded-lg text-sm text-gray-700 border border-gray-100">
+                                {{ task.values.social_posts.instagram }}
+                            </div>
+                        </div>
+                        {% else %}
+                        <p class="text-gray-400 italic text-sm">No social posts generated.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Review Section -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="bg-purple-50 px-6 py-4 border-b border-purple-100">
+                        <h2 class="text-lg font-bold text-purple-800 uppercase tracking-wider">Editorial Review</h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-4">
+                             {% if task.values.review_report %}
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm font-medium text-gray-600">Overall Quality</span>
+                                    <span class="text-lg font-bold text-purple-600">{{ task.values.review_report.quality_score }}/100</span>
+                                </div>
+                                <div class="w-full bg-gray-100 rounded-full h-2">
+                                    <div class="bg-purple-600 h-2 rounded-full" style="width: {{ task.values.review_report.quality_score }}%"></div>
+                                </div>
+                                
+                                <div class="mt-6">
+                                    <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Key Issues & Suggestions</label>
+                                    <ul class="space-y-2">
+                                        {% for issue in task.values.review_report.issues %}
+                                            <li class="flex items-start text-sm text-gray-700">
+                                                <svg class="w-4 h-4 text-purple-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
+                                                {{ issue }}
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% else %}
+                                <p class="text-gray-400 italic text-sm">No review report available.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Render markdown
+        document.getElementById('content').innerHTML = marked.parse(document.getElementById('content').innerText);
+    </script>
+</body>
+</html>
